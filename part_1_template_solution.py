@@ -338,7 +338,7 @@ class Section1:
 
         best_clf = grid_search.best_estimator_ = grid_search.best_estimator_
 
-        # Predictions with the best model
+        # Predictions in best model
         y_train_pred_bst = best_clf.predict(X)
         y_test_pred_bst = best_clf.predict(Xtest)
 
