@@ -84,15 +84,13 @@ class Section1:
     """
 
     def partB(
-        self,
     ):
-
         X, y, Xtest, ytest = u.prepare_data()
         Xtrain, ytrain = u.filter_out_7_9s(X, y)
         Xtest, ytest = u.filter_out_7_9s(Xtest, ytest)
-
         Xtrain = nu.scale_data(Xtrain)
         Xtest = nu.scale_data(Xtest)
+
         answer = {}
 
         # Enter your code and fill the `answer` dictionary
@@ -103,6 +101,10 @@ class Section1:
         answer["length_ytest"] = len(ytest)
         answer["max_Xtrain"] = Xtrain.max()
         answer["max_Xtest"] = Xtest.max()
+        
+        return answer, Xtrain, ytrain, Xtest, ytest
+
+
 
     """
     C. Train your first classifier using k-fold cross validation (see train_simple_classifier_with_cv 
@@ -123,7 +125,7 @@ class Section1:
         answer = {}
         clf = DecisionTreeClassifier(random_state=self.seed)
         cv = KFold(n_splits=5,random_state=self.seed,shuffle = True)
-        results = u.train_simple_classifier_with_cv(Xtrain=Xtrain, ytrain=ytrain, clf=clf, cv=cv)
+        results = u.train_simple_classifier_with_cv(Xtrain=X, ytrain=y, clf=clf, cv=cv)
         answer["clf"] = DecisionTreeClassifier(random_state=self.seed) 
         answer["cv"] = KFold(n_splits=5,shuffle=True,random_state=self.seed) 
         
@@ -149,9 +151,14 @@ class Section1:
         y: NDArray[np.int32],
     ):
         # Enter your code and fill the `answer` dictionary
+        Xtrain, ytrain = u.filter_out_7_9s(X, y)
+        Xtest, ytest = u.filter_out_7_9s(Xtest, ytest)
+        Xtrain = nu.scale_data(Xtrain)
+        Xtest = nu.scale_data(Xtest)
+
         clf = DecisionTreeClassifier(random_state=self.seed)
         cv = ShuffleSplit(n_splits=5,random_state=self.seed)
-        results = u.train_simple_classifier_with_cv(Xtrain=Xtrain, ytrain=ytrain, clf=clf, cv=cv)
+        results = cross_validate(clf,X,y,cv=cv)
         
         answer = {}
         answer["clf"] = DecisionTreeClassifier(random_state=self.seed) 
@@ -324,6 +331,16 @@ class Section1:
         """
         clf_rf=RandomForestClassifier(random_state=self.seed)
         cv=ShuffleSplit(n_splits=5,random_state=self.seed)
+
+        # Predictions with the initial model
+        y_train_pred_orig = clf_rf.predict(X)
+        y_test_pred_orig = clf_rf.predict(Xtest)
+
+        conf_matrix_train_orig = confusion_matrix(y, y_train_pred_orig)
+        conf_matrix_test_orig = confusion_matrix(ytest, y_test_pred_orig)
+        # Accuracies
+        accuracy_train_orig = nu.conf_mat_accuracy(conf_matrix_train_orig)
+        accuracy_test_orig = nu.conf_mat_accuracy(conf_matrix_test_orig)
         
         param_grid = { 'criterion': ['gini', 'entropy'],
                         'max_depth': [10, 20, 30, None],
@@ -338,7 +355,7 @@ class Section1:
 
         best_clf = grid_search.best_estimator_ = grid_search.best_estimator_
 
-        # Predictions in best model
+        # Predictions with the best model
         y_train_pred_bst = best_clf.predict(X)
         y_test_pred_bst = best_clf.predict(Xtest)
 
@@ -379,7 +396,7 @@ class Section1:
             "accuracy_best_full_testing"
                
         """
-            answer = {
+        answer = {
             "clf": clf_rf,
             "default_parameters": clf_rf.get_params(),
             "best_estimator": best_clf,
@@ -392,7 +409,6 @@ class Section1:
             "accuracy_orig_full_training": accuracy_train_orig,
             "accuracy_best_full_training": accuracy_train_bst,
             "accuracy_orig_full_testing": accuracy_test_orig,
-            "accuracy_best_full_testing": accuracy_test_bst
-        }
+            "accuracy_best_full_testing": accuracy_test_bst}
 
         return answer
